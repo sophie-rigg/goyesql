@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"os"
 )
 
 var (
@@ -22,12 +23,48 @@ type Queries map[Tag]string
 
 // ParseReader takes an io.Reader and returns Queries or an error.
 func ParseReader(reader io.Reader) (Queries, error) {
+	queries := make(Queries)
+
+	err := parseReader(reader, queries)
+	if err != nil {
+		return nil, err
+	}
+
+	return queries, nil
+}
+
+func ParseDirectory(dir string) (Queries, error) {
+	directoryFiles, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := make(Queries)
+	for _, file := range directoryFiles {
+		if file.IsDir() {
+			continue
+		}
+
+		file, err := os.Open(file.Name())
+		if err != nil {
+			return nil, err
+		}
+
+		err = parseReader(file, queries)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return queries, nil
+}
+
+func parseReader(reader io.Reader, queries Queries) error {
 	var (
 		lastTag  Tag
 		lastLine parsedLine
 	)
 
-	queries := make(Queries)
 	scanner := bufio.NewScanner(reader)
 
 	for scanner.Scan() {
@@ -42,7 +79,7 @@ func ParseReader(reader io.Reader) (Queries, error) {
 		case lineQuery:
 			// got a query but no tag before
 			if lastTag == "" {
-				return nil, ErrTagMissing
+				return ErrTagMissing
 			}
 
 			query := line.Value
@@ -55,7 +92,7 @@ func ParseReader(reader io.Reader) (Queries, error) {
 		case lineTag:
 			// got a tag after another tag
 			if lastLine.Type == lineTag {
-				return nil, ErrTagOverwritten
+				return ErrTagOverwritten
 			}
 
 			lastTag = Tag(line.Value)
@@ -66,8 +103,8 @@ func ParseReader(reader io.Reader) (Queries, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return queries, nil
+	return nil
 }
