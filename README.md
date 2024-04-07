@@ -12,7 +12,7 @@ Parse a file and associate SQL queries to a map. Useful for separating SQL from 
 # Installation
 
 ```
-$ go get -u github.com/nleof/goyesql
+$ go get -u github.com/sophie-rigg/goyesql
 ```
 
 # Usage
