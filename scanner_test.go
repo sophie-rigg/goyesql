@@ -51,3 +51,37 @@ func TestScannerValid(t *testing.T) {
 		}
 	}
 }
+
+func TestScannerDirectory(t *testing.T) {
+	dir := "tests/sample-directory"
+
+	queries, err := ParseDirectory(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedQueries := Queries{
+		"simple":      "SELECT * FROM simple;",
+		"multiline":   "SELECT * FROM multiline WHERE line = 42;",
+		"comments":    "SELECT * FROM comments;",
+		"simple-2":    "SELECT * FROM simple;",
+		"multiline-2": "SELECT * FROM multiline WHERE line = 42;",
+		"comments-2":  "SELECT * FROM comments;",
+	}
+
+	if len(queries) != len(expectedQueries) {
+		t.Errorf(
+			"%s should return %d requests, got %d",
+			dir, len(expectedQueries), len(queries),
+		)
+	}
+
+	for key, expectedQuery := range expectedQueries {
+		if queries[key] != expectedQuery {
+			t.Errorf(
+				"%s query should be '%s', got '%s'",
+				key, expectedQuery, queries[key],
+			)
+		}
+	}
+}

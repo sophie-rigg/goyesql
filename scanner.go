@@ -45,7 +45,7 @@ func ParseDirectory(dir string) (Queries, error) {
 			continue
 		}
 
-		file, err := os.Open(file.Name())
+		file, err := os.Open(dir + "/" + file.Name())
 		if err != nil {
 			return nil, err
 		}
